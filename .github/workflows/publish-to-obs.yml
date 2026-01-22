@@ -1,0 +1,58 @@
+name: Publish Mesa spec to OBS
+
+on:
+  push:
+    branches: [ main ]          # لو عايز يشتغل على كل push للـ main
+  # release:
+  #   types: [published]       # لو عايز بس لما تعمل release / tag، شيل # من هنا
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install osc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osc
+
+      - name: Configure osc with token
+        env:
+          OBS_TOKEN: ${{ secrets.OBS_TOKEN }}
+        run: |
+          mkdir -p ~/.config/osc
+          cat > ~/.config/osc/oscrc << EOF
+          [general]
+          apiurl=https://api.opensuse.org
+
+          [https://api.opensuse.org]
+          credentials_mgr_class=osc.credentials.ObfuscatedConfigFileCredentialsManager
+          user=youssef3mk
+          pass=\$OBS_TOKEN
+          EOF
+
+      - name: Checkout OBS package
+        run: |
+          osc checkout home:youssef3mk mesame
+          cd home:youssef3mk/mesame
+
+      - name: Copy files from this repo to OBS package
+        run: |
+          cp -f ../mesa.spec .                  # غيّر mesa.spec لو اسم الملف مختلف
+          cp -f ../_service . 2>/dev/null || true   # لو عندك _service
+
+      - name: Commit changes to OBS
+        run: |
+          cd home:youssef3mk/mesame
+          osc addremove --force || true
+          osc commit -m "Auto-update from GitHub commit ${{ github.sha }} (${{ github.event.head_commit.message }})"
+
+      - name: Trigger rebuild (optional)
+        run: |
+          cd home:youssef3mk/mesame
+          osc rebuild || true   # يعيد بناء كل الـ targets
