@@ -56,3 +56,8 @@ jobs:
         run: |
           cd home:youssef3mk/mesame
           osc rebuild || true   # يعيد بناء كل الـ targets
+      - name: Update revision in _service
+        run: |
+          sed -i "s|<param name=\"revision\">.*</param>|<param name=\"revision\">${{ github.sha }}</param>|" _service
+          git add _service
+          git commit --amend --no-edit || true
