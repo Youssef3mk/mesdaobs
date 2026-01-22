@@ -1,0 +1,13 @@
+<services>
+  <service name="tar_scm" mode="buildtime">
+    <param name="url">https://gitlab.freedesktop.org/mesa/mesa.git</param>
+    <param name="scm">git</param>
+    <param name="revision">c5b70dcb48fe230c20b69d57fe712228cb1a57c2</param>
+    <param name="version">26.3.1</param>
+    <param name="exclude">.git</param>
+  </service>
+  <service name="recompress" mode="buildtime">
+    <param name="file">*.tar</param>
+    <param name="compression">xz</param>
+  </service>
+</services>
